@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>樂齡科技配對遊戲 - Geron Technology</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            font-size: 18px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 35px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 12px;
+            background: linear-gradient(90deg, #4a90e2, #63b3ed, #4a90e2);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 3px solid #e4edf5;
+        }
+        
+        h1 {
+            color: #2c5282;
+            font-size: 3.2rem;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            color: #4a5568;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            background-color: #e6fffa;
+            border-left: 6px solid #38b2ac;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 12px 12px 0;
+            font-size: 1.5rem;
+            line-height: 1.8;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #ebf8ff 0%, #e6fffa 100%);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .info-label {
+            font-size: 1.5rem;
+            color: #4a5568;
+            margin-bottom: 12px;
+        }
+        
+        .info-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c5282;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px; /* 減少間距為卡片騰出更多空間 */
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            height: 300px; /* 增加卡片高度以容納所有內容 */
+            background: linear-gradient(135deg, #4a90e2 0%, #63b3ed 100%);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            transform-style: preserve-3d;
+            position: relative;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            border: 4px solid white;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card.matched {
+            cursor: default;
+            background: linear-gradient(135deg, #48bb78 0%, #68d391 100%);
+            transform: scale(0.95) rotateY(180deg);
+            box-shadow: 0 6px 12px rgba(72, 187, 120, 0.4);
+        }
+        
+        .card.matched:hover {
+            transform: scale(0.95) rotateY(180deg);
+        }
+        
+        .card.speaking {
+            animation: speaking 0.8s infinite alternate;
+        }
+        
+        @keyframes speaking {
+            0% { box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15), 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            100% { box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15), 0 0 0 10px rgba(245, 158, 11, 0); }
+        }
+        
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        .card-front {
+            background: linear-gradient(135deg, #4a90e2 0%, #63b3ed 100%);
+            color: white;
+            font-size: 3.5rem;
+            font-weight: bold;
+            justify-content: center;
+        }
+        
+        .card-back {
+            background: white;
+            transform: rotateY(180deg);
+            border: 4px solid #e2e8f0;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.05);
+            padding: 12px 8px; /* 調整內邊距 */
+            justify-content: space-between;
+        }
+        
+        .card-icon {
+            width: 150px; /* 稍微減小圖標尺寸 */
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5px;
+            flex-shrink: 0;
+        }
+        
+        .card-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .card-text {
+            font-size: 1.5rem; /* 調整字體大小 */
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+            line-height: 1.2;
+            flex-shrink: 0;
+            padding: 0 5px;
+        }
+        
+        .card-description {
+            font-size: 1.2rem; /* 調整字體大小 */
+            color: #718096;
+            line-height: 1.3; /* 調整行高 */
+            flex-shrink: 0;
+            padding: 6px 8px;
+            width: 100%;
+            text-align: center;
+            background-color: #f7fafc;
+            border-radius: 8px;
+            margin-top: 3px;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: keep-all; /* 防止文字斷行 */
+            overflow-wrap: break-word; /* 允許文字換行 */
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            padding: 20px 40px;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #4a90e2 0%, #63b3ed 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 10px rgba(74, 144, 226, 0.4);
+            min-width: 200px;
+        }
+        
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(74, 144, 226, 0.5);
+        }
+        
+        button:active {
+            transform: translateY(2px);
+        }
+        
+        button:disabled {
+            background: linear-gradient(135deg, #cbd5e0 0%, #e2e8f0 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            color: #a0aec0;
+        }
+        
+        .voice-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #f59e0b;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 1.4rem;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .message {
+            text-align: center;
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            font-size: 1.8rem;
+            display: none;
+            background: linear-gradient(135deg, #fed7e2 0%, #fbb6ce 100%);
+            color: #702459;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+            line-height: 1.6;
+        }
+        
+        .success {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #22543d;
+            display: block;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        /* iPad 橫向模式 (1024px - 768px) */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .game-board {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 15px; /* 進一步減少間距 */
+            }
+            
+            .card {
+                height: 280px; /* 調整iPad卡片高度 */
+            }
+            
+            .card-icon {
+                width: 130px;
+                height: 130px;
+            }
+            
+            .card-text {
+                font-size: 1.4rem;
+            }
+            
+            .card-description {
+                font-size: 1.1rem;
+                min-height: 40px;
+                line-height: 1.2;
+                padding: 5px 6px;
+            }
+            
+            .card-front {
+                font-size: 3rem;
+            }
+            
+            h1 {
+                font-size: 2.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1.6rem;
+            }
+            
+            .instructions {
+                font-size: 1.4rem;
+                padding: 18px;
+            }
+            
+            .info-label {
+                font-size: 1.4rem;
+            }
+            
+            .info-value {
+                font-size: 2.2rem;
+            }
+        }
+        
+        /* iPad 縱向模式 (768px以下) */
+        @media (max-width: 767px) {
+            .game-board {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .card {
+                height: 260px;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1.5rem;
+            }
+            
+            .card-icon {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .card-text {
+                font-size: 1.4rem;
+            }
+            
+            .card-description {
+                font-size: 1.1rem;
+                min-height: 40px;
+                padding: 5px 6px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+            
+            button {
+                width: 90%;
+                font-size: 1.6rem;
+                padding: 18px 30px;
+            }
+            
+            .voice-indicator {
+                font-size: 1.2rem;
+                padding: 8px 12px;
+            }
+        }
+        
+        /* 手機模式 (480px以下) */
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .game-board {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            
+            .card {
+                height: 220px; /* 手機上進一步減小高度 */
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.3rem;
+            }
+            
+            .instructions {
+                font-size: 1.3rem;
+                padding: 15px;
+            }
+            
+            .card-icon {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 3px;
+            }
+            
+            .card-text {
+                font-size: 1.3rem;
+                margin-bottom: 3px;
+            }
+            
+            .card-description {
+                font-size: 1rem;
+                min-height: 35px;
+                padding: 4px 5px;
+                line-height: 1.2;
+            }
+            
+            .card-front {
+                font-size: 3rem;
+            }
+            
+            .info-label {
+                font-size: 1.3rem;
+            }
+            
+            .info-value {
+                font-size: 2rem;
+            }
+            
+            .message {
+                font-size: 1.5rem;
+                padding: 20px;
+            }
+            
+            .voice-indicator {
+                font-size: 1rem;
+                padding: 6px 10px;
+                bottom: 10px;
+                right: 10px;
+            }
+        }
+        
+        /* 超大屏幕適配 */
+        @media (min-width: 1200px) {
+            .container {
+                max-width: 1200px;
+            }
+            
+            .game-board {
+                gap: 25px;
+            }
+            
+            .card {
+                height: 320px;
+            }
+            
+            .card-icon {
+                width: 160px;
+                height: 160px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>樂齡科技配對遊戲</h1>
+            <p class="subtitle">認識輔助科技，享受智慧生活</p>
+            <div class="instructions">
+                點擊卡片翻開，找到相對應的科技產品配對。配對成功的卡片會保持翻開狀態！<br>
+                卡片翻開時會有粵語語音朗讀產品名稱。
+            </div>
+        </header>
+        
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">步數</div>
+                <div class="info-value" id="moves">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">匹配數</div>
+                <div class="info-value" id="matches">0/4</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">時間</div>
+                <div class="info-value" id="timer">0秒</div>
+            </div>
+        </div>
+        
+        <div class="game-board" id="gameBoard">
+            <!-- 卡片將通過JavaScript動態生成 -->
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">開始遊戲</button>
+            <button id="resetBtn" disabled>重新開始</button>
+        </div>
+        
+        <div class="message" id="message">
+            <!-- 遊戲消息將在這裡顯示 -->
+        </div>
+    </div>
+    
+    <div class="voice-indicator" id="voiceIndicator">
+        🔊 語音播放中...
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 遊戲卡片數據 - 各種老年輔助科技
+            const cardData = [
+                { 
+                    id: 1, 
+                    name: '智能藥盒', 
+                    icon: '<img src="smart-pill-icon.png" alt="Smart Pill Icon">', 
+                    description: '按時提醒服藥',
+                    cantoneseName: '智能藥盒'
+                },
+                { 
+                    id: 1, 
+                    name: '智能藥盒', 
+                    icon: '<img src="smart-pill-icon.png" alt="Smart Pill Icon">', 
+                    description: '按時提醒服藥',
+                    cantoneseName: '智能藥盒'
+                },
+                { 
+                    id: 2, 
+                    name: '防遊走警報', 
+                    icon: '<img src="anti-wandering-icon.png" alt="Anti-Wandering Alert Icon">', 
+                    description: '家居監察及警報',
+                    cantoneseName: '防遊走警報'
+                },
+                { 
+                    id: 2, 
+                    name: '防遊走警報', 
+                    icon: '<img src="anti-wandering-icon.png" alt="Anti-Wandering Alert Icon">', 
+                    description: '家居監察及警報',
+                    cantoneseName: '防遊走警報'
+                },
+                { 
+                    id: 3, 
+                    name: '助聽器', 
+                    icon: '<img src="hearing-aid-icon.png" alt="Hearing Aid Icon">', 
+                    description: '增強聽力能力',
+                    cantoneseName: '助聽器'
+                },
+                { 
+                    id: 3, 
+                    name: '助聽器', 
+                    icon: '<img src="hearing-aid-icon.png" alt="Hearing Aid Icon">', 
+                    description: '增強聽力能力',
+                    cantoneseName: '助聽器'
+                },
+                { 
+                    id: 4, 
+                    name: '氣墊床褥', 
+                    icon: '<img src="air-mattress-icon.png" alt="Air Mattress Icon">',
+                    description: '防止壓瘡形成',
+                    cantoneseName: '氣墊床褥'
+                },
+                { 
+                    id: 4, 
+                    name: '氣墊床褥', 
+                    icon: '<img src="air-mattress-icon.png" alt="Air Mattress Icon">', 
+                    description: '防止壓瘡形成',
+                    cantoneseName: '氣墊床褥'
+                }
+            ];
+            
+            // 粵語語音映射 - 使用粵語拼音
+            const cantonesePronunciations = {
+                '智能藥盒': 'zi3 nang4 joek6 hap6',
+                '防遊走警報': 'fong4 jau4 zau2 ging2 bou3',
+                '助聽器': 'zo6 ting1 hei3',
+                '氣墊床褥': 'hei3 zin3 cong4 juk6'
+            };
+            
+            const gameBoard = document.getElementById('gameBoard');
+            const movesDisplay = document.getElementById('moves');
+            const matchesDisplay = document.getElementById('matches');
+            const timerDisplay = document.getElementById('timer');
+            const startBtn = document.getElementById('startBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const message = document.getElementById('message');
+            const voiceIndicator = document.getElementById('voiceIndicator');
+            
+            let cards = [];
+            let flippedCards = [];
+            let matchedPairs = 0;
+            let moves = 0;
+            let gameStarted = false;
+            let timer = 0;
+            let timerInterval;
+            let canFlip = true;
+            let isSpeaking = false;
+            let speechSynthesis = window.speechSynthesis;
+            
+            // 初始化遊戲
+            function initGame() {
+                // 重置遊戲狀態
+                cards = [];
+                flippedCards = [];
+                matchedPairs = 0;
+                moves = 0;
+                timer = 0;
+                gameStarted = false;
+                canFlip = true;
+                isSpeaking = false;
+                
+                // 停止所有語音
+                if (speechSynthesis.speaking) {
+                    speechSynthesis.cancel();
+                }
+                
+                // 隱藏語音指示器
+                voiceIndicator.style.display = 'none';
+                
+                // 更新顯示
+                movesDisplay.textContent = moves;
+                matchesDisplay.textContent = `${matchedPairs}/4`;
+                timerDisplay.textContent = '0秒';
+                
+                // 清空遊戲板
+                gameBoard.innerHTML = '';
+                message.className = 'message';
+                message.style.display = 'none';
+                
+                // 禁用重置按鈕，啟用開始按鈕
+                resetBtn.disabled = true;
+                startBtn.disabled = false;
+                
+                // 清除計時器
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+                
+                // 複製並洗牌卡片數據
+                const shuffledCards = [...cardData].sort(() => Math.random() - 0.5);
+                
+                // 創建卡片元素
+                shuffledCards.forEach((card, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'card';
+                    cardElement.dataset.id = card.id;
+                    cardElement.dataset.name = card.name;
+                    
+                    cardElement.innerHTML = `
+                        <div class="card-front">?</div>
+                        <div class="card-back">
+                            <div class="card-icon">${card.icon}</div>
+                            <div class="card-text">${card.name}</div>
+                            <div class="card-description">${card.description}</div>
+                        </div>
+                    `;
+                    
+                    cardElement.addEventListener('click', () => flipCard(cardElement));
+                    gameBoard.appendChild(cardElement);
+                    
+                    cards.push({
+                        id: card.id,
+                        name: card.name,
+                        element: cardElement,
+                        flipped: false,
+                        matched: false
+                    });
+                });
+            }
+            
+            // 粵語語音朗讀
+            function speakCantonese(text) {
+                return new Promise((resolve) => {
+                    if (!speechSynthesis) {
+                        console.log('語音合成不可用');
+                        resolve();
+                        return;
+                    }
+                    
+                    // 停止當前語音
+                    if (speechSynthesis.speaking) {
+                        speechSynthesis.cancel();
+                    }
+                    
+                    // 顯示語音指示器
+                    voiceIndicator.style.display = 'block';
+                    
+                    // 設置語音參數
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'zh-HK'; // 粵語
+                    utterance.rate = 0.9; // 稍慢一點，方便聽清楚
+                    utterance.pitch = 1.0;
+                    utterance.volume = 1.0;
+                    
+                    // 朗讀完成時
+                    utterance.onend = function() {
+                        isSpeaking = false;
+                        voiceIndicator.style.display = 'none';
+                        
+                        // 移除說話動畫
+                        document.querySelectorAll('.card.speaking').forEach(card => {
+                            card.classList.remove('speaking');
+                        });
+                        
+                        resolve();
+                    };
+                    
+                    // 朗讀錯誤時
+                    utterance.onerror = function() {
+                        isSpeaking = false;
+                        voiceIndicator.style.display = 'none';
+                        
+                        // 移除說話動畫
+                        document.querySelectorAll('.card.speaking').forEach(card => {
+                            card.classList.remove('speaking');
+                        });
+                        
+                        resolve();
+                    };
+                    
+                    // 開始朗讀
+                    isSpeaking = true;
+                    speechSynthesis.speak(utterance);
+                });
+            }
+            
+            // 翻轉卡片
+            function flipCard(cardElement) {
+                if (!gameStarted || !canFlip || isSpeaking) return;
+                
+                const card = cards.find(c => c.element === cardElement);
+                
+                // 如果卡片已經匹配或已經翻轉，則忽略點擊
+                if (card.matched || card.flipped) {
+                    return;
+                }
+                
+                // 翻轉卡片
+                cardElement.classList.add('flipped');
+                card.flipped = true;
+                flippedCards.push(card);
+                
+                // 播放粵語語音
+                if (card.name && cantonesePronunciations[card.name]) {
+                    canFlip = false;
+                    cardElement.classList.add('speaking');
+                    
+                    // 使用粵語拼音朗讀
+                    speakCantonese(card.name).then(() => {
+                        // 語音播放完成後，檢查是否匹配
+                        checkForMatch();
+                    });
+                } else {
+                    // 如果沒有語音，直接檢查匹配
+                    checkForMatch();
+                }
+            }
+            
+            // 檢查匹配
+            function checkForMatch() {
+                if (flippedCards.length === 2) {
+                    moves++;
+                    movesDisplay.textContent = moves;
+                    
+                    // 檢查匹配
+                    if (flippedCards[0].id === flippedCards[1].id) {
+                        // 匹配成功 - 卡片保持翻開狀態
+                        setTimeout(() => {
+                            flippedCards[0].matched = true;
+                            flippedCards[1].matched = true;
+                            flippedCards[0].element.classList.add('matched');
+                            flippedCards[1].element.classList.add('matched');
+                            matchedPairs++;
+                            matchesDisplay.textContent = `${matchedPairs}/4`;
+                            
+                            // 清空翻轉卡片數組
+                            flippedCards = [];
+                            canFlip = true;
+                            
+                            // 檢查遊戲是否結束
+                            if (matchedPairs === 4) {
+                                endGame();
+                            }
+                        }, 500);
+                    } else {
+                        // 不匹配，稍後翻轉回來
+                        setTimeout(() => {
+                            flippedCards[0].element.classList.remove('flipped');
+                            flippedCards[1].element.classList.remove('flipped');
+                            flippedCards[0].flipped = false;
+                            flippedCards[1].flipped = false;
+                            flippedCards = [];
+                            canFlip = true;
+                        }, 1000);
+                    }
+                } else {
+                    // 只有一張卡片翻開，可以繼續翻轉
+                    canFlip = true;
+                }
+            }
+            
+            // 開始遊戲
+            function startGame() {
+                gameStarted = true;
+                startBtn.disabled = true;
+                resetBtn.disabled = false;
+                
+                // 開始計時
+                timerInterval = setInterval(() => {
+                    timer++;
+                    timerDisplay.textContent = `${timer}秒`;
+                }, 1000);
+            }
+            
+            // 結束遊戲
+            function endGame() {
+                gameStarted = false;
+                clearInterval(timerInterval);
+                
+                // 顯示成功消息
+                message.textContent = `恭喜您！您在 ${timer} 秒內完成了遊戲，使用了 ${moves} 步！`;
+                message.className = 'message success';
+                message.style.display = 'block';
+                
+                // 播放完成語音
+                setTimeout(() => {
+                    speakCantonese('恭喜你完成遊戲！');
+                }, 500);
+            }
+            
+            // 事件監聽器
+            startBtn.addEventListener('click', startGame);
+            resetBtn.addEventListener('click', initGame);
+            
+            // 初始化遊戲
+            initGame();
+        });
+    </script>
+</body>
+</html>
